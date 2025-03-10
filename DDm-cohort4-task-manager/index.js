@@ -7,7 +7,12 @@ const moment = require('moment');
 
 const app = express();
 app.use(express.json());
-app.use(cors());
+
+// Configure CORS with your Netlify frontend URL
+const corsOptions = {
+  origin: 'https://ddm-cohort-4-task-manager.netlify.app' // ✅ ADD YOUR NETLIFY FRONTEND URL HERE
+};
+app.use(cors(corsOptions));
 
 // Connect to SQLite Database
 const db = new sqlite3.Database('./tasks.db', (err) => {
