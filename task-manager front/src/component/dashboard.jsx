@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'; // Import useRef
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { FaEdit, FaTrash, FaCommentDots, FaUserCircle } from 'react-icons/fa';
@@ -19,7 +19,7 @@ const Dashboard = () => {
     const [username, setUsername] = useState(() => {
         return localStorage.getItem('username') || '';
     });
-    const logoutTimeoutRef = useRef(null); // Ref to store the timeout
+    const logoutTimeoutRef = useRef(null);
 
     const isLoggedIn = () => {
         return localStorage.getItem('token') !== null;
@@ -38,7 +38,7 @@ const Dashboard = () => {
     };
 
     const logoutRequest = async (currentUsername) => {
-        clearAutomaticLogout(); // Clear the automatic logout timeout on manual logout
+        clearAutomaticLogout();
         localStorage.removeItem('token');
         localStorage.removeItem('username');
         localStorage.removeItem('tokenExpiration');
@@ -50,8 +50,8 @@ const Dashboard = () => {
 
     const clearAutomaticLogout = () => {
         if (logoutTimeoutRef.current) {
-            clearTimeout(logoutTimeoutRef.current); // Clear the timeout using the ref
-            logoutTimeoutRef.current = null; // Reset the ref
+            clearTimeout(logoutTimeoutRef.current);
+            logoutTimeoutRef.current = null;
         }
     };
 
@@ -64,11 +64,9 @@ const Dashboard = () => {
             const timeLeft = expiryTime - currentTime;
 
             if (timeLeft <= 0) {
-                // Token expired
                 handleAutomaticLogout();
             } else {
-                // Set timeout to logout when token expires
-                logoutTimeoutRef.current = setTimeout(() => { // Store timeout in ref
+                logoutTimeoutRef.current = setTimeout(() => {
                     handleAutomaticLogout();
                 }, timeLeft);
             }
@@ -86,11 +84,10 @@ const Dashboard = () => {
 
 
     useEffect(() => {
-        checkTokenExpiration(); // Check token expiration on component mount
+        checkTokenExpiration();
 
-        // Clear timeout when component unmounts
         return () => clearAutomaticLogout();
-    }, [checkTokenExpiration]); // Dependency on useCallback function
+    }, [checkTokenExpiration]);
 
 
     const getPriorityBasedOnStatus = (status) => {
@@ -122,7 +119,6 @@ const Dashboard = () => {
         }
     };
 
-    // Modified handleUpdateStatus to accept an 'isAutomatic' parameter
     const handleUpdateStatus = useCallback(async (taskId, newStatus, isAutomatic = false) => {
         const token = localStorage.getItem('token');
         if (!token) {
@@ -134,28 +130,28 @@ const Dashboard = () => {
         }
 
         try {
-            console.log("Before updateStatus API call - Tasks state:", tasks); // ADDED LOG
+            console.log("Before updateStatus API call - Tasks state:", tasks);
             await updateTaskStatus(taskId, newStatus);
-            setTasks(prevTasks => { // Update setTasks to use prevState and log
+            setTasks(prevTasks => {
                 const updatedTasks = prevTasks.map(task =>
                     task.id === taskId
                         ? { ...task, status: newStatus, priority: getPriorityBasedOnStatus(newStatus) }
                         : task
                 );
-                console.log("After setTasks in handleUpdateStatus - Updated Tasks state:", updatedTasks); // ADDED LOG
+                console.log("After setTasks in handleUpdateStatus - Updated Tasks state:", updatedTasks);
                 return updatedTasks;
             });
             setShowStatusDropdown(null);
-            if (!isAutomatic) { // Show toast only if the update is NOT automatic
+            if (!isAutomatic) {
                 toast.success('Task status updated successfully');
             }
         } catch (error) {
             console.error('Error updating task status:', error);
-            if (!isAutomatic) { // Show error toast only if the update is NOT automatic
+            if (!isAutomatic) {
                 toast.error('Failed to update task status');
             }
         }
-    }, [navigate, setTasks, tasks]); // Added tasks to dependency array - important!
+    }, [navigate, setTasks, tasks]);
 
 
     useEffect(() => {
@@ -197,7 +193,6 @@ const Dashboard = () => {
                     const taskEndTime = moment(`${task.endDate} ${task.endTime}`, 'YYYY-MM-DD HH:mm');
                     if (moment().isAfter(taskEndTime)) {
                         try {
-                            // Call handleUpdateStatus with isAutomatic = true
                             await handleUpdateStatus(task.id, 'overdue', true);
                         } catch (error) {
                             console.error(`Error updating task ${task.id} to overdue:`, error);
@@ -222,7 +217,7 @@ const Dashboard = () => {
 
     const filteredTasks = tasks?.filter(task => statusFilter === 'all' || task.status === statusFilter) || [];
 
-    console.log("Tasks being rendered:", filteredTasks); // ADDED LOG
+    console.log("Tasks being rendered:", filteredTasks);
 
     const handleDeleteTask = async (taskId) => {
         const token = localStorage.getItem('token');
@@ -341,7 +336,7 @@ const Dashboard = () => {
                 <div className="flex items-center space-x-4">
                     {isLoggedIn() ? (
                         <>
-                            <span className="font-semibold hidden sm:block">Welcome back, {username}</span> {/* Hide username on small screens */}
+                            <span className="font-semibold">Welcome back, {username}</span> {/* Reverted: Welcome back visible on all screens */}
                             <button
                                 onClick={handleLogout}
                                 className="bg-red-500 px-3 py-2 rounded-md text-white hover:bg-red-600 text-sm"
@@ -365,7 +360,7 @@ const Dashboard = () => {
                             setEditingTask(null);
                             setShowTask(true);
                         }}
-                        className="bg-blue-700 px-3 py-2 rounded-md text-white hover:bg-blue-600 whitespace-nowrap sm:ml-auto" // Added responsive classes
+                        className="bg-blue-700 px-3 py-2 rounded-md text-white hover:bg-blue-600 whitespace-nowrap sm:ml-auto"
                     >
                         Add new task
                     </button>
@@ -416,7 +411,7 @@ const Dashboard = () => {
                 </div>
             ) : (
                 <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {console.log("Rendering tasks:", filteredTasks)} {/* ADDED LOG */}
+                    {console.log("Rendering tasks:", filteredTasks)}
                     {filteredTasks.map(task => (
                         <TaskCard
                             key={task.id}
