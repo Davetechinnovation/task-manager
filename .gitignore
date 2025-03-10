@@ -1,0 +1,30 @@
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Dependency folders
+node_modules/
+
+# Build output folders
+build/
+dist/
+
+# Package lock files (if you don't want to track them, though often they are useful to track)
+package-lock.json
+yarn.lock
+
+# Log files
+*.log
+
+# System files (hidden system files)
+.DS_Store # macOS folder metadata
+Thumbs.db # Windows thumbnail cache
+
+# IDE specific files (adjust based on your IDE)
+.idea/      # IntelliJ IDEA
+.vscode/    # VS Code
+*.suo        # Visual Studio Solution User Options
+*.userprefs  # Eclipse
