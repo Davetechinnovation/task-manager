@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom'; // ✅ Import Link
 
 const Signup = () => {
     const [username, setUsername] = useState('');
@@ -124,9 +124,9 @@ const Signup = () => {
                         <div className="mt-6 text-center">
                             <p className="text-sm text-gray-600">
                                 Already have an account?{' '}
-                                <a href="/login" className="text-blue-600 hover:underline">
+                                <Link to="/login" className="text-blue-600 hover:underline"> {/* ✅ Changed to Link */}
                                     Sign in
-                                </a>
+                                </Link>
                             </p>
                         </div>
                     </div>
