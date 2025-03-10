@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { FaEdit, FaTrash, FaCommentDots, FaUserCircle } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaCommentDots, FaUserCircle, FaSpinner } from 'react-icons/fa'; // Import FaSpinner
 import { MdUpdate, MdAccountCircle } from 'react-icons/md';
 import { fetchTasks, addTask, updateTaskStatus, deleteTask, editTask as apiEditTask } from '../utils/api';
 import { useNavigate } from 'react-router-dom';
@@ -20,6 +20,7 @@ const Dashboard = () => {
         return localStorage.getItem('username') || '';
     });
     const logoutTimeoutRef = useRef(null);
+    const [statusLoading, setStatusLoading] = useState({}); // State to track loading status per task
 
     const isLoggedIn = () => {
         return localStorage.getItem('token') !== null;
@@ -129,6 +130,7 @@ const Dashboard = () => {
             return;
         }
 
+        setStatusLoading(prevState => ({ ...prevState, [taskId]: true })); // Set loading to true for this task
         try {
             console.log("Before updateStatus API call - Tasks state:", tasks);
             await updateTaskStatus(taskId, newStatus);
@@ -150,6 +152,8 @@ const Dashboard = () => {
             if (!isAutomatic) {
                 toast.error('Failed to update task status');
             }
+        } finally {
+            setStatusLoading(prevState => ({ ...prevState, [taskId]: false })); // Set loading to false after API call
         }
     }, [navigate, setTasks, tasks]);
 
@@ -247,7 +251,7 @@ const Dashboard = () => {
     };
 
 
-    const TaskCard = ({ task, onEdit, onDelete, onUpdateStatus, showStatusDropdown, setShowStatusDropdown }) => {
+    const TaskCard = ({ task, onEdit, onDelete, onUpdateStatus, showStatusDropdown, setShowStatusDropdown, statusLoading }) => { // Added statusLoading prop
         return (
             <div className="p-4 border rounded-lg shadow-md relative">
                 <div className="absolute top-2 right-2 flex space-x-2 text-gray-600">
@@ -268,17 +272,27 @@ const Dashboard = () => {
                 <p className="text-xs text-gray-500 mt-1">Start: {task.startDate} {task.startTime}</p>
                 <p className="text-xs text-gray-500">End: {task.endDate} {task.endTime}</p>
                 <button
-                    className="mt-2 p-1 text-black border border-black rounded-md"
+                    className="mt-2 p-1 text-black border border-black rounded-md flex items-center justify-center" // Centered content
                     onClick={() => setShowStatusDropdown(showStatusDropdown === task.id ? null : task.id)}
+                    disabled={statusLoading[task.id]} // Disable button when loading
                 >
-                    Change Status
+                    {statusLoading[task.id] ? (
+                        <>
+                            <FaSpinner className="animate-spin mr-2" /> {/* Spinner icon */}
+                            Loading...
+                        </>
+                    ) : (
+                        "Change Status"
+                    )}
                 </button>
+
                 {showStatusDropdown === task.id && (
                     <div className="mt-2 relative">
                         <select
                             className="w-full p-2 border rounded"
                             value={task.status}
                             onChange={(e) => onUpdateStatus(task.id, e.target.value)}
+                            disabled={statusLoading[task.id]} // Disable select when loading
                         >
                             <option value="pending">Pending</option>
                             <option value="in-progress">In Progress</option>
@@ -421,6 +435,7 @@ const Dashboard = () => {
                             onUpdateStatus={handleUpdateStatus}
                             showStatusDropdown={showStatusDropdown}
                             setShowStatusDropdown={setShowStatusDropdown}
+                            statusLoading={statusLoading} // Pass statusLoading to TaskCard
                         />
                     ))}
                 </div>
