@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:4000'; // Replace with your backend URL
+const API_BASE_URL = 'https://task-manager-91g9.onrender.com'; // Replace with your backend URL
 
 // ✅ Function to add a new task
 export const addTask = async (task) => {
