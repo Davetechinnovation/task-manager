@@ -130,32 +130,33 @@ app.post('/register', async (req, res) => {
 });
 
 
-// Route: User Login (✅ Modified to allow login with username or email)
+// Route: User Login (✅ Modified to include username in the JSON response)
 app.post('/login', async (req, res) => {
-  const { username, password } = req.body; // Frontend still sends 'username'
+    const { username, password } = req.body; // Frontend still sends 'username'
 
-  if (!username || !password) {
-      return res.status(400).json({ error: 'Missing required fields' });
-  }
+    if (!username || !password) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
 
-  // ✅ Modified SQL query to check for username OR email
-  db.get('SELECT * FROM users WHERE username = ? OR email = ?', [username, username], async (err, user) => {
-      if (err) {
-          return res.status(500).json({ error: 'Failed to login', details: err.message });
-      }
+    // ✅ Modified SQL query to check for username OR email
+    db.get('SELECT * FROM users WHERE username = ? OR email = ?', [username, username], async (err, user) => {
+        if (err) {
+            return res.status(500).json({ error: 'Failed to login', details: err.message });
+        }
 
-      if (!user) {
-          return res.status(404).json({ error: 'User not found' });
-      }
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
 
-      const isPasswordValid = await bcrypt.compare(password, user.password);
-      if (!isPasswordValid) {
-          return res.status(401).json({ error: 'Invalid password' });
-      }
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            return res.status(401).json({ error: 'Invalid password' });
+        }
 
-      const token = jwt.sign({ id: user.id, username: user.username }, 'your-secret-key', { expiresIn: '1h' });
-      res.status(200).json({ message: 'Login successful', token });
-  });
+        const token = jwt.sign({ id: user.id, username: user.username }, 'your-secret-key', { expiresIn: '1h' });
+        // ✅ Include username in the JSON response body
+        res.status(200).json({ message: 'Login successful', token, username: user.username });
+    });
 });
 
 
@@ -177,7 +178,7 @@ app.post('/add_task', async (req, res) => {
             INSERT INTO tasks (task_name, task_description, task_start_time, task_end_time, task_start_date, task_end_date, status, priority, category, user_id)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
-        const params = [task_name, task_description, task_start_time, task_end_time, task_start_date, task_end_date, status, priority, category, userId];
+        const params = [task_name, task_description, task_start_time, task_end_date, task_start_date, task_end_date, status, priority, category, userId];
 
         db.run(sql, params, function(err) {
             if (err) {
