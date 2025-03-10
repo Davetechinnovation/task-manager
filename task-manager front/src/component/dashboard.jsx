@@ -341,7 +341,7 @@ const Dashboard = () => {
                 <div className="flex items-center space-x-4">
                     {isLoggedIn() ? (
                         <>
-                            <span className="font-semibold">Welcome back, {username}</span>
+                            <span className="font-semibold hidden sm:block">Welcome back, {username}</span> {/* Hide username on small screens */}
                             <button
                                 onClick={handleLogout}
                                 className="bg-red-500 px-3 py-2 rounded-md text-white hover:bg-red-600 text-sm"
@@ -365,7 +365,7 @@ const Dashboard = () => {
                             setEditingTask(null);
                             setShowTask(true);
                         }}
-                        className="bg-blue-700 px-3 py-2 rounded-md text-white hover:bg-blue-600"
+                        className="bg-blue-700 px-3 py-2 rounded-md text-white hover:bg-blue-600 whitespace-nowrap sm:ml-auto" // Added responsive classes
                     >
                         Add new task
                     </button>

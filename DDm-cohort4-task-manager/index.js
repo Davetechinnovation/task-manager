@@ -129,32 +129,35 @@ app.post('/register', async (req, res) => {
     );
 });
 
-// Route: User Login (No changes needed)
+
+// Route: User Login (✅ Modified to allow login with username or email)
 app.post('/login', async (req, res) => {
-    const { username, password } = req.body;
+  const { username, password } = req.body; // Frontend still sends 'username'
 
-    if (!username || !password) {
-        return res.status(400).json({ error: 'Missing required fields' });
-    }
+  if (!username || !password) {
+      return res.status(400).json({ error: 'Missing required fields' });
+  }
 
-    db.get('SELECT * FROM users WHERE username = ?', [username], async (err, user) => {
-        if (err) {
-            return res.status(500).json({ error: 'Failed to login', details: err.message });
-        }
+  // ✅ Modified SQL query to check for username OR email
+  db.get('SELECT * FROM users WHERE username = ? OR email = ?', [username, username], async (err, user) => {
+      if (err) {
+          return res.status(500).json({ error: 'Failed to login', details: err.message });
+      }
 
-        if (!user) {
-            return res.status(404).json({ error: 'User not found' });
-        }
+      if (!user) {
+          return res.status(404).json({ error: 'User not found' });
+      }
 
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) {
-            return res.status(401).json({ error: 'Invalid password' });
-        }
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
+          return res.status(401).json({ error: 'Invalid password' });
+      }
 
-        const token = jwt.sign({ id: user.id, username: user.username }, 'your-secret-key', { expiresIn: '1h' });
-        res.status(200).json({ message: 'Login successful', token });
-    });
+      const token = jwt.sign({ id: user.id, username: user.username }, 'your-secret-key', { expiresIn: '1h' });
+      res.status(200).json({ message: 'Login successful', token });
+  });
 });
+
 
 
 // Route: Add a New Task (No changes needed)

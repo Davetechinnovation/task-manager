@@ -84,7 +84,7 @@ const Login = () => {
         <div className="flex items-center justify-center min-h-screen bg-gray-50">
             <ToastContainer />
             <div className="flex flex-col md:flex-row w-full max-w-4xl mx-4 my-10 md:my-0 bg-white shadow-lg rounded-lg overflow-hidden">
-                {/* Left Side: Login Form */}
+                
                 <div className="w-full md:w-1/2 flex items-center justify-center py-10 md:py-20 bg-slate-100">
                     <div className="max-w-md w-full px-4">
                         <h1 className="text-2xl font-bold text-center text-gray-800 mb-2">Sign In</h1>
@@ -93,12 +93,12 @@ const Login = () => {
                         <form onSubmit={handleSubmit}>
                             <div className="mb-4">
                                 <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="username">
-                                    Email/Username
+                                    Email or Username 
                                 </label>
                                 <input
                                     type="text"
                                     id="username"
-                                    placeholder="Enter your email or username"
+                                    placeholder="Enter your email or username" 
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
                                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -136,7 +136,7 @@ const Login = () => {
                         <div className="mt-6 text-center">
                             <p className="text-sm text-gray-600">
                                 Don't have an account?{' '}
-                                <Link to="/signup" className="text-blue-600 hover:underline"> {/* ✅ Changed to Link */}
+                                <Link to="/signup" className="text-blue-600 hover:underline"> 
                                     Sign up
                                 </Link>
                             </p>
