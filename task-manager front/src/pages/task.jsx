@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { addTask, editTask } from '../utils/api';
+import { addTask, updateTask, fetchTasks, editTask } from '../utils/api';
 import { useNavigate } from 'react-router-dom';
 import { FaSpinner } from 'react-icons/fa'; // Import spinner icon
 
-const Task = ({ onClose, setTasks, editingTask, reloadTasks}) => {
+const Task = ({ onClose, setTasks, editingTask, reloadTasks, setEditingTask }) => {
     const [taskName, setTaskName] = useState('');
     const [category, setCategory] = useState('');
     const [description, setDescription] = useState('');
