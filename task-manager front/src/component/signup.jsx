@@ -29,7 +29,7 @@ const Signup = () => {
 
     // Encapsulate the signup fetch request in a separate async function
     const signupRequest = async ({ username, email, password }) => {
-        const response = await fetch('http://localhost:4000/register', {
+        const response = await fetch('https://task-manager-91g9.onrender.com/register', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
