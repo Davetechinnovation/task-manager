@@ -270,7 +270,7 @@ const Dashboard = () => {
                     </span>
                 </div>
                 <p className="text-xs text-gray-500 mt-1">Start: {task.startDate} {task.startTime}</p>
-                <p className="text-xs text-gray-500">End: {task.endDate} {task.endTime}</p>
+                <p className="text-xs text-gray-500">End: {task.endDate} {moment(task.endTime, 'HH:mm:ss').format('HH:mm')}</p> {/* Formatted end time */}
                 <button
                     className="mt-2 p-1 text-black border border-black rounded-md flex items-center justify-center" // Centered content
                     onClick={() => setShowStatusDropdown(showStatusDropdown === task.id ? null : task.id)}
