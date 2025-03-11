@@ -22,14 +22,19 @@ export const addTask = async (task) => {
 
 // ✅ Function to fetch all tasks
 export const fetchTasks = async () => {
-    const token = localStorage.getItem('token'); // Optional: include token if needed
+    const token = localStorage.getItem('token');
+    if (!token) {
+        throw new Error('No token found. Please log in.');
+    }
     const response = await fetch(`${API_BASE_URL}/tasks`, {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        headers: {
+            'Authorization': `Bearer ${token}` // Always include Authorization header
+        }
     });
     if (!response.ok) {
-        const errorText = await response.text(); // Get the response text for more details
-        console.error('HTTP error!', response.status, errorText); // Log status and text
-        throw new Error(`Failed to fetch tasks: ${response.status} - ${errorText}`); // Include in error message
+        const errorText = await response.text();
+        console.error('HTTP error!', response.status, errorText);
+        throw new Error(`Failed to fetch tasks: ${response.status} - ${errorText}`);
     }
     return await response.json();
 };
