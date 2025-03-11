@@ -571,6 +571,11 @@ const Dashboard = () => {
         );
       };
       
+      // Function to format comment dates
+      const formatCommentDate = (dateString) => {
+        return moment(dateString).format('MMM D, YYYY [at] h:mm A');
+      };
+      
       const TaskCard = memo(({
         task,
         onEdit,
@@ -595,15 +600,49 @@ const Dashboard = () => {
       }) => {
         const isCommentsSectionVisible = showCommentsSection === task.id;
         const commentInputRef = useRef(null);
+        const replyInputRef = useRef(null);
         const [showMentionsDropdown, setShowMentionsDropdown] = useState(false);
         const [mentionSearchTerm, setMentionSearchTerm] = useState('');
         const mentionedUsers = ['user1', 'user2', 'user3']; // Replace with actual user list
       
         console.log("TaskCard RENDERED for task ID:", task.id, "Comment Section Visible:", isCommentsSectionVisible);
       
+        // Effect to handle mobile focus issues with reply input
+        useEffect(() => {
+          if (replyingToCommentId && replyInputRef.current) {
+            // Focus the input
+            replyInputRef.current.focus();
+            
+            // This prevents the mobile keyboard from hiding between keystrokes
+            const preventBlur = (e) => {
+              e.preventDefault();
+              replyInputRef.current.focus();
+            };
+            
+            // Add event listeners to maintain focus
+            replyInputRef.current.addEventListener('blur', preventBlur);
+            
+            // Ensure input stays focused when user interacts with it
+            replyInputRef.current.addEventListener('touchstart', () => {
+              setTimeout(() => {
+                if (replyInputRef.current) {
+                  replyInputRef.current.focus();
+                }
+              }, 0);
+            });
+            
+            // Clean up event listeners
+            return () => {
+              if (replyInputRef.current) {
+                replyInputRef.current.removeEventListener('blur', preventBlur);
+                replyInputRef.current.removeEventListener('touchstart', preventBlur);
+              }
+            };
+          }
+        }, [replyingToCommentId]);
+      
         const renderComment = useCallback((comment, taskId) => {
           const isReplying = replyingToCommentId === comment.id;
-          const replyInputRef = useReplyInputFocus(isReplying);
           
           return (
             <li key={comment.id} className="border-l-2 pl-3 py-1">
@@ -687,7 +726,7 @@ const Dashboard = () => {
               )}
             </li>
           );
-        }, [replyingToCommentId, newCommentText, commentLoading, username, setReplyingToCommentId, setNewCommentText, handleAddComment, handleDeleteComment]);
+        }, [replyingToCommentId, newCommentText, commentLoading, username, setReplyingToCommentId, setNewCommentText, handleAddComment, handleDeleteComment, replyInputRef]);
       
         const handleCommentClick = useCallback(() => {
           if (!isCommentsSectionVisible) {
