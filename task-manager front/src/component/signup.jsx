@@ -30,7 +30,7 @@ const Signup = () => {
     // Encapsulate the signup fetch request in a separate async function
     const signupRequest = async ({ username, email, password }) => {
         try { // ✅ Try-catch block for fetch
-            const response = await fetch('http://localhost:4000/signup', { // ✅ Corrected endpoint to '/signup'
+            const response = await fetch('https://task-manager-91g9.onrender.com/signup', { // ✅ Corrected endpoint to '/signup'
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

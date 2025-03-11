@@ -11,7 +11,7 @@ const app = express();
 app.use(express.json());
 
 const corsOptions = {
-    origin: 'http://localhost:5173',
+    origin: 'https://ddm-cohort-4-task-manager.netlify.app',
 };
 app.use(cors(corsOptions));
 

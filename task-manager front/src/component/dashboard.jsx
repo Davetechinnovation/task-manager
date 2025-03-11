@@ -292,7 +292,7 @@ const Dashboard = () => {
     const loadComments = async (taskId) => {
         setCommentLoading(true);
         try {
-            const response = await fetch(`http://localhost:4000/tasks/${taskId}/comments`, {
+            const response = await fetch(`https://task-manager-91g9.onrender.com/tasks/${taskId}/comments`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
                     'Content-Type': 'application/json',
@@ -343,7 +343,7 @@ const Dashboard = () => {
         setCommentLoading(true);
         console.log("handleAddComment START - Task ID:", taskId, "Parent Comment ID:", parentCommentId); // ✅ Log start of function
         try {
-            const response = await fetch(`http://localhost:4000/tasks/${taskId}/comments`, {
+            const response = await fetch(`https://task-manager-91g9.onrender.com/tasks/${taskId}/comments`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -391,7 +391,7 @@ const Dashboard = () => {
         if (window.confirm('Are you sure you want to delete this comment?')) {
             setCommentLoading(true);
             try {
-                const response = await fetch(`http://localhost:4000/tasks/${taskId}/comments/${commentId}`, {
+                const response = await fetch(`https://task-manager-91g9.onrender.com/tasks/${taskId}/comments/${commentId}`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`,

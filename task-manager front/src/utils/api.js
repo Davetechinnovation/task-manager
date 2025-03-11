@@ -1,5 +1,5 @@
 // api.js
-const BASE_URL = 'http://localhost:4000'; // Backend URL
+const BASE_URL = 'https://task-manager-91g9.onrender.com'; // Backend URL
 
 // Function to handle API errors
 const handleResponse = async (response) => {
