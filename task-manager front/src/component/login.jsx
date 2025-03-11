@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom'; // ✅ Import Link
+import { useNavigate, Link } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -12,12 +12,10 @@ const Login = () => {
         e.preventDefault();
 
         if (!username || !password) {
-            console.log('Displaying toast for missing fields'); // Debugging log
-            toast.error('Please fill in all fields');
+            toast.error('Please fill in all fields.');
             return;
         }
 
-        console.log('Displaying toast for login promise'); // Debugging log
         toast.promise(
             loginRequest({ username, password }),
             {
@@ -25,7 +23,7 @@ const Login = () => {
                 success: 'Login successful! Redirecting...',
                 error: {
                     render({ data }) {
-                        return data?.error || 'Login failed. Please try again.'; // Fallback generic error
+                        return data?.error || 'Login failed. Please try again.';
                     },
                 },
             }
@@ -33,7 +31,7 @@ const Login = () => {
     };
 
     const loginRequest = async ({ username, password }) => {
-        try { // ✅ Try-catch block for fetch
+        try {
             const response = await fetch('https://task-manager-91g9.onrender.com/login', {
                 method: 'POST',
                 headers: {
@@ -56,22 +54,20 @@ const Login = () => {
                 navigate('/');
                 return 'Login Successful';
             } else {
-                // ✅ Improved error handling based on backend messages
                 let errorMessage = 'Login failed. Please try again.'; // Generic fallback
                 if (data && data.message) {
-                    errorMessage = data.message; // Use backend message if available
+                    errorMessage = data.message;
                     if (data.message === 'Username not found') {
-                        errorMessage = 'Username not found. Please check your username.';
+                        errorMessage = 'Invalid username. Please check your username.'; // More specific error
                     } else if (data.message === 'Incorrect password') {
-                        errorMessage = 'Incorrect password. Please check your password.';
+                        errorMessage = 'Invalid password. Please check your password.'; // More specific error
                     }
                 }
-                throw { error: errorMessage }; // Throw with specific or generic error
+                throw { error: errorMessage };
             }
         } catch (error) {
-            // ✅ Catch network errors (e.g., no internet)
             console.error('Fetch error during login:', error);
-            throw { error: 'Network error. Please check your internet connection.' };
+            throw { error: 'Network error. Please check your internet connection.' }; // Network error message
         }
     };
 

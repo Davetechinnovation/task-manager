@@ -557,20 +557,15 @@ const Dashboard = () => {
             prevProps.onDelete === nextProps.onDelete &&
             prevProps.onUpdateStatus === nextProps.onUpdateStatus &&
             prevProps.showStatusDropdown === nextProps.showStatusDropdown &&
-            nextProps.showStatusDropdown === nextProps.showStatusDropdown &&
             prevProps.statusLoading === nextProps.statusLoading &&
             prevProps.showCommentsSection === nextProps.showCommentsSection &&
-            nextProps.showCommentsSection === nextProps.showCommentsSection &&
             prevProps.commentLoading === nextProps.commentLoading &&
-            nextProps.commentLoading === nextProps.commentLoading &&
             prevProps.comments === nextProps.comments &&
             prevProps.newCommentText === nextProps.newCommentText &&
-            nextProps.newCommentText === nextProps.newCommentText &&
-            prevProps.replyingToCommentId === nextProps.replyingToCommentId &&
-            nextProps.replyingToCommentId === nextProps.replyingToCommentId
+            prevProps.replyingToCommentId === nextProps.replyingToCommentId
         );
     };
-
+    
     const TaskCard = memo(({
         task,
         onEdit,
@@ -590,14 +585,15 @@ const Dashboard = () => {
         handleDeleteComment,
         username,
         onShareTask,
-        replyingToCommentId, // ✅ Prop for reply state
-        setReplyingToCommentId, // ✅ Prop for reply state
+        replyingToCommentId,
+        setReplyingToCommentId,
     }) => {
         const isCommentsSectionVisible = showCommentsSection === task.id;
         const commentInputRef = useRef(null);
-
+        const replyInputRef = useRef(null); // Add a separate ref for reply input
+    
         console.log("TaskCard RENDERED for task ID:", task.id, "Comment Section Visible:", isCommentsSectionVisible);
-
+    
         const handleCommentClick = useCallback(() => {
             if (!isCommentsSectionVisible) {
                 loadComments(task.id);
@@ -606,13 +602,20 @@ const Dashboard = () => {
                 setShowCommentsSection(null);
             }
         }, [isCommentsSectionVisible, task.id, loadComments, setShowCommentsSection]);
-
+    
+        // Improved focus management for mobile
         useEffect(() => {
-            if (isCommentsSectionVisible && commentInputRef.current) {
-                commentInputRef.current.focus();
+            if (isCommentsSectionVisible) {
+                if (replyingToCommentId && replyInputRef.current) {
+                    // Focus the reply input when replying
+                    replyInputRef.current.focus();
+                } else if (commentInputRef.current) {
+                    // Focus the main comment input otherwise
+                    commentInputRef.current.focus();
+                }
             }
-        }, [isCommentsSectionVisible]);
-
+        }, [isCommentsSectionVisible, replyingToCommentId]);
+    
         const getStatusColor = (status) => {
             switch (status) {
                 case 'pending': return 'bg-yellow-200 text-yellow-700';
@@ -623,7 +626,7 @@ const Dashboard = () => {
                 default: return 'bg-gray-200 text-gray-700';
             }
         };
-
+    
         const getPriorityColor = (priority) => {
             switch (priority) {
                 case 'low': return 'bg-green-200 text-green-700';
@@ -632,19 +635,106 @@ const Dashboard = () => {
                 default: return 'bg-gray-200 text-gray-700';
             }
         };
-
-        const canEdit = task.sharedByUsername === username || !task.isShared; // ✅ Only allow edit if user is sharer or task is not shared
-
+    
+        const canEdit = task.sharedByUsername === username || !task.isShared;
+    
+        // Function to handle reply submission
+        const handleReply = useCallback((commentId) => {
+            handleAddComment(task.id, commentId);
+            setReplyingToCommentId(null); // Reset replying state after submission
+        }, [task.id, handleAddComment, setReplyingToCommentId]);
+    
+        // Function to render comment, including reply functionality
+        const renderComment = useCallback((comment, taskId) => {
+            const isReplyingToThisComment = replyingToCommentId === comment.id;
+            
+            return (
+                <li key={comment.id} className="p-2 border rounded-md">
+                    <div className="flex justify-between">
+                        <span className="font-medium">{comment.username}</span>
+                        <span className="text-xs text-gray-500">{new Date(comment.created_at).toLocaleString()}</span>
+                    </div>
+                    <p className="text-sm mt-1">{comment.text}</p>
+                    
+                    <div className="flex mt-2 space-x-2 text-xs">
+                        <button 
+                            className="text-blue-600 hover:underline"
+                            onClick={() => setReplyingToCommentId(isReplyingToThisComment ? null : comment.id)}
+                        >
+                            {isReplyingToThisComment ? 'Cancel' : 'Reply'}
+                        </button>
+                        {comment.username === username && (
+                            <button 
+                                className="text-red-600 hover:underline"
+                                onClick={() => handleDeleteComment(taskId, comment.id)}
+                            >
+                                Delete
+                            </button>
+                        )}
+                    </div>
+                    
+                    {/* Reply input - improved for mobile */}
+                    {isReplyingToThisComment && (
+                        <div className="flex mt-2">
+                            <input
+                                type="text"
+                                ref={replyInputRef}
+                                className="flex-grow p-2 border rounded-md mr-2"
+                                placeholder={`Reply to ${comment.username}...`}
+                                value={newCommentText}
+                                onChange={(e) => setNewCommentText(e.target.value)}
+                                // Add these attributes to improve mobile keyboard behavior
+                                autoComplete="off"
+                                autoCapitalize="sentences"
+                                autoCorrect="on"
+                                spellCheck="true"
+                            />
+                            <button
+                                onClick={() => handleReply(comment.id)}
+                                className="p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200"
+                                disabled={commentLoading}
+                            >
+                                {commentLoading ? <FaSpinner className="animate-spin" /> : <FaPaperPlane />}
+                            </button>
+                        </div>
+                    )}
+                    
+                    {/* Render replies if any */}
+                    {comment.replies && comment.replies.length > 0 && (
+                        <ul className="ml-6 mt-2 space-y-2">
+                            {comment.replies.map(reply => (
+                                <li key={reply.id} className="p-2 border-l-2 border-gray-200 pl-2">
+                                    <div className="flex justify-between">
+                                        <span className="font-medium">{reply.username}</span>
+                                        <span className="text-xs text-gray-500">{new Date(reply.created_at).toLocaleString()}</span>
+                                    </div>
+                                    <p className="text-sm mt-1">{reply.text}</p>
+                                    {reply.username === username && (
+                                        <button 
+                                            className="text-xs text-red-600 hover:underline mt-1"
+                                            onClick={() => handleDeleteComment(taskId, reply.id)}
+                                        >
+                                            Delete
+                                        </button>
+                                    )}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </li>
+            );
+        }, [replyingToCommentId, newCommentText, setNewCommentText, commentLoading, handleDeleteComment, username, handleReply, setReplyingToCommentId]);
+    
         return (
             <div className="p-4 border rounded-lg shadow-md relative">
                 <div className="absolute top-2 right-2 flex space-x-2 text-gray-600">
-                    {canEdit && ( // ✅ Conditionally render edit icon
+                    {canEdit && (
                         <FaEdit className="cursor-pointer" onClick={() => onEdit(task)} />
                     )}
-                    {canEdit && ( // ✅ Conditionally render update status icon
+                    {canEdit && (
                         <MdUpdate className="cursor-pointer" onClick={() => setShowStatusDropdown(showStatusDropdown === task.id ? null : task.id)} />
                     )}
-                    {canEdit && ( // ✅ Conditionally render delete icon
+                    {canEdit && (
                         <FaTrash className="cursor-pointer text-red-500" onClick={() => onDelete(task.id)} />
                     )}
                     <FaShareAlt
@@ -654,7 +744,6 @@ const Dashboard = () => {
                     />
                 </div>
                 <h3 className="font-bold text-lg mb-1">{task.title}</h3>
-                {/* ✅ Display "Shared by: Me" for sharer, "Shared by: username" for others */}
                 {task.isShared && task.sharedByUsername && (
                     <p className="text-sm italic text-gray-500 mb-1">
                         Shared by: {task.sharedByUsername === username ? 'Me' : task.sharedByUsername}
@@ -679,8 +768,8 @@ const Dashboard = () => {
                 </div>
                 <p className="text-xs text-gray-500 mt-1">Start: {task.startDate} {task.startTime}</p>
                 <p className="text-xs text-gray-500">End: {task.endDate} {moment(task.endTime, 'HH:mm:ss').format('HH:mm')}</p>
-
-                {canEdit && ( // ✅ Conditionally render status dropdown
+    
+                {canEdit && (
                     <div className="mt-2 relative">
                         <select
                             className="w-full p-2 border rounded"
@@ -700,7 +789,7 @@ const Dashboard = () => {
                         )}
                     </div>
                 )}
-
+    
                 <div className="mt-3 border-t pt-3">
                     <button
                         className="p-1 text-gray-500 rounded-md flex items-center justify-center hover:bg-gray-100 transition-colors duration-200 w-full"
@@ -711,22 +800,22 @@ const Dashboard = () => {
                         Comments
                         {commentLoading && <FaSpinner className="animate-spin ml-1" />}
                     </button>
-
+    
                     {isCommentsSectionVisible && (
                         <div className="mt-2 relative">
                             <h4 className="font-semibold mb-2">Comments</h4>
                             {commentLoading && <p className="text-gray-500">Loading comments...</p>}
-                            {comments[task.id] && Object.values(comments[task.id]).length > 0 ? ( // ✅ Iterate over object values
+                            {comments[task.id] && Object.values(comments[task.id]).length > 0 ? (
                                 <ul className="space-y-2">
-                                    {Object.values(comments[task.id]).sort((a, b) => new Date(a.created_at) - new Date(b.created_at)).map(comment => ( // ✅ Iterate over object values and sort
-                                        renderComment(comment, task.id) // Render comment using useCallback renderComment function
-                                    ))}
+                                    {Object.values(comments[task.id])
+                                        .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+                                        .map(comment => renderComment(comment, task.id))}
                                 </ul>
                             ) : !commentLoading ? (
                                 <p className="text-gray-500 mt-2">No comments yet.</p>
                             ) : null}
-
-                            {!replyingToCommentId && ( // ✅ Conditionally render top-level comment input
+    
+                            {!replyingToCommentId && (
                                 <div className="flex mt-2">
                                     <input
                                         type="text"
@@ -734,51 +823,15 @@ const Dashboard = () => {
                                         className="flex-grow p-2 border rounded-md mr-2"
                                         placeholder="Add a comment..."
                                         value={newCommentText}
-                                        onChange={(e) => {
-                                            setNewCommentText(e.target.value);
-                                            setMentionSearchTerm(e.target.value); // ✅ Update search term for mentions
-                                            setShowMentionsDropdown(e.target.value.includes('@')); // ✅ Show dropdown on '@'
-                                        }}
-                                        onBlur={() => setTimeout(() => setShowMentionsDropdown(false), 100)} // ✅ Hide dropdown on blur
-                                        onFocus={() => setShowMentionsDropdown(mentionSearchTerm.includes('@'))} // ✅ Show dropdown on focus if '@' is present
-
+                                        onChange={(e) => setNewCommentText(e.target.value)}
+                                        // Add these attributes to improve mobile keyboard behavior
+                                        autoComplete="off"
+                                        autoCapitalize="sentences"
+                                        autoCorrect="on"
+                                        spellCheck="true"
                                     />
-                                     {showMentionsDropdown && (
-                                        <ul className="absolute z-10 mt-1 w-auto bg-white border rounded shadow-md">
-                                            {mentionedUsers.length === 0 ? ( // ✅ Handle no users case
-                                                <li className="px-4 py-2 text-gray-500">No active users</li>
-                                            ) : mentionedUsers.length === 1 ? ( // ✅ Handle single user case
-                                                <li
-                                                    key={mentionedUsers[0]}
-                                                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                                                    onClick={() => {
-                                                        setNewCommentText(newCommentText.replace(/@\w*/, `@${mentionedUsers[0]} `)); // ✅ Use the single username
-                                                        setShowMentionsDropdown(false);
-                                                    }}
-                                                >
-                                                    {mentionedUsers[0]}
-                                                </li>
-
-                                            ) : ( // ✅ Handle multiple users case
-                                                mentionedUsers
-                                                    .filter(user => user.toLowerCase().includes(mentionSearchTerm.substring(mentionSearchTerm.indexOf('@') + 1).toLowerCase()))
-                                                    .map(user => (
-                                                        <li
-                                                            key={user}
-                                                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                                                            onClick={() => {
-                                                                setNewCommentText(newCommentText.replace(/@\w*/, `@${user} `));
-                                                                setShowMentionsDropdown(false);
-                                                            }}
-                                                        >
-                                                            {user}
-                                                        </li>
-                                                    ))
-                                            )}
-                                        </ul>
-                                    )}
                                     <button
-                                        onClick={() => handleAddComment(task.id)} // ✅ Add top-level comment
+                                        onClick={() => handleAddComment(task.id)}
                                         className="p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200"
                                         disabled={commentLoading}
                                         aria-label="Add Comment"
@@ -793,7 +846,7 @@ const Dashboard = () => {
             </div>
         );
     }, TaskCardPropsAreEqual);
-
+    
     TaskCard.displayName = 'TaskCard';
 
 

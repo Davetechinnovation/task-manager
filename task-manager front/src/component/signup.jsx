@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { useNavigate, Link } from 'react-router-dom'; // ✅ Import Link
+import { useNavigate, Link } from 'react-router-dom';
 
 const Signup = () => {
     const [username, setUsername] = useState('');
@@ -13,12 +13,12 @@ const Signup = () => {
         e.preventDefault();
 
         toast.promise(
-            signupRequest({ username, email, password }), // Call the signupRequest function within toast.promise
+            signupRequest({ username, email, password }),
             {
                 pending: 'Signing up...',
                 success: 'Signup successful! Redirecting to login...',
                 error: {
-                    render({ data }) { // data here is the error object from signupRequest
+                    render({ data }) {
                         return data?.error || 'Registration failed. Please try again.';
                     }
                 }
@@ -27,10 +27,9 @@ const Signup = () => {
     };
 
 
-    // Encapsulate the signup fetch request in a separate async function
     const signupRequest = async ({ username, email, password }) => {
-        try { // ✅ Try-catch block for fetch
-            const response = await fetch('https://task-manager-91g9.onrender.com/signup', { // ✅ Corrected endpoint to '/signup'
+        try {
+            const response = await fetch('https://task-manager-91g9.onrender.com/signup', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -39,28 +38,26 @@ const Signup = () => {
             });
             const data = await response.json();
             if (!response.ok) {
-                // Throw an error to trigger the error toast with specific backend messages
                 let errorMessage = 'Registration failed. Please try again.'; // Generic fallback
                 if (data && data.message) {
-                    errorMessage = data.message; // Use backend message if available
+                    errorMessage = data.message;
                     if (data.message === 'Username already taken') {
-                        errorMessage = 'Username already taken. Please choose a different username.';
+                        errorMessage = 'Username already taken. Please choose a different username.'; // More specific error
                     } else if (data.message === 'Email already registered') {
-                        errorMessage = 'Email already registered. Please use a different email.';
+                        errorMessage = 'Email already registered. Please use a different email.'; // More specific error
                     } else if (data.message === 'All fields are required for signup') {
-                        errorMessage = 'Please fill in all the required fields for signup.';
+                        errorMessage = 'Please fill in all the required fields for signup.'; // More specific error
                     }
                 }
-                throw { error: errorMessage }; // Throw with specific or generic error
+                throw { error: errorMessage };
             } else {
                 await new Promise(resolve => setTimeout(resolve, 100));
-                navigate('/login'); // Redirect to login page after successful signup
-                return data.message || 'Registration successful'; // Success message for toast.promise
+                navigate('/login');
+                return data.message || 'Registration successful';
             }
         } catch (error) {
-            // ✅ Catch network errors
             console.error('Fetch error during signup:', error);
-            throw { error: 'Network error. Please check your internet connection.' };
+            throw { error: 'Network error. Please check your internet connection.' }; // Network error message
         }
     };
 
@@ -141,7 +138,7 @@ const Signup = () => {
                         <div className="mt-6 text-center">
                             <p className="text-sm text-gray-600">
                                 Already have an account?{' '}
-                                <Link to="/login" className="text-blue-600 hover:underline"> {/* ✅ Changed to Link */}
+                                <Link to="/login" className="text-blue-600 hover:underline">
                                     Sign in
                                 </Link>
                             </p>
