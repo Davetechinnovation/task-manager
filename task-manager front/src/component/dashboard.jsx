@@ -550,7 +550,6 @@ const Dashboard = () => {
 
 
     const TaskCardPropsAreEqual = (prevProps, nextProps) => {
-        // Compare relevant props to determine if a re-render is needed
         return (
             prevProps.task === nextProps.task &&
             prevProps.onEdit === nextProps.onEdit &&
@@ -644,27 +643,28 @@ const Dashboard = () => {
             setReplyingToCommentId(null); // Reset replying state after submission
         }, [task.id, handleAddComment, setReplyingToCommentId]);
     
-        // Function to render comment, including reply functionality
-        const renderComment = useCallback((comment, taskId) => {
+        // Function to render comment, including reply functionality and nested replies
+        const renderComment = useCallback((comment, taskId, depth = 0) => { // Added depth for indentation
             const isReplyingToThisComment = replyingToCommentId === comment.id;
-            
+            const indentClass = `ml-${depth * 4}`; // Indentation based on depth
+    
             return (
-                <li key={comment.id} className="p-2 border rounded-md">
+                <li key={comment.id} className={`p-2 border rounded-md ${indentClass}`}>
                     <div className="flex justify-between">
                         <span className="font-medium">{comment.username}</span>
                         <span className="text-xs text-gray-500">{new Date(comment.created_at).toLocaleString()}</span>
                     </div>
-                    <p className="text-sm mt-1">{comment.text}</p>
-                    
+                    <p className="text-sm mt-1">{comment.comment}</p> {/* Changed comment.text to comment.comment */}
+    
                     <div className="flex mt-2 space-x-2 text-xs">
-                        <button 
+                        <button
                             className="text-blue-600 hover:underline"
                             onClick={() => setReplyingToCommentId(isReplyingToThisComment ? null : comment.id)}
                         >
                             {isReplyingToThisComment ? 'Cancel' : 'Reply'}
                         </button>
-                        {comment.username === username && (
-                            <button 
+                        {comment.user_id === username && (
+                            <button
                                 className="text-red-600 hover:underline"
                                 onClick={() => handleDeleteComment(taskId, comment.id)}
                             >
@@ -672,7 +672,7 @@ const Dashboard = () => {
                             </button>
                         )}
                     </div>
-                    
+    
                     {/* Reply input - improved for mobile */}
                     {isReplyingToThisComment && (
                         <div className="flex mt-2">
@@ -698,27 +698,11 @@ const Dashboard = () => {
                             </button>
                         </div>
                     )}
-                    
-                    {/* Render replies if any */}
+    
+                    {/* Render replies if any - recursively call renderComment for replies */}
                     {comment.replies && comment.replies.length > 0 && (
-                        <ul className="ml-6 mt-2 space-y-2">
-                            {comment.replies.map(reply => (
-                                <li key={reply.id} className="p-2 border-l-2 border-gray-200 pl-2">
-                                    <div className="flex justify-between">
-                                        <span className="font-medium">{reply.username}</span>
-                                        <span className="text-xs text-gray-500">{new Date(reply.created_at).toLocaleString()}</span>
-                                    </div>
-                                    <p className="text-sm mt-1">{reply.text}</p>
-                                    {reply.username === username && (
-                                        <button 
-                                            className="text-xs text-red-600 hover:underline mt-1"
-                                            onClick={() => handleDeleteComment(taskId, reply.id)}
-                                        >
-                                            Delete
-                                        </button>
-                                    )}
-                                </li>
-                            ))}
+                        <ul className="mt-2 space-y-2">
+                            {comment.replies.map(reply => renderComment(reply, taskId, depth + 1))} {/* Increased depth for nested replies */}
                         </ul>
                     )}
                 </li>
@@ -743,13 +727,13 @@ const Dashboard = () => {
                         aria-label={task.isShared ? "Unshare Task" : "Share Task"}
                     />
                 </div>
-                <h3 className="font-bold text-lg mb-1">{task.title}</h3>
-                {task.isShared && task.sharedByUsername && (
+                <h3 className="font-bold text-lg mb-1">{task.task_name}</h3> {/* Changed task.title to task.task_name */}
+                {task.is_shared && task.shared_by_username && (
                     <p className="text-sm italic text-gray-500 mb-1">
-                        Shared by: {task.sharedByUsername === username ? 'Me' : task.sharedByUsername}
+                        Shared by: {task.shared_by_username === username ? 'Me' : task.shared_by_username}
                     </p>
                 )}
-                <p className="text-sm text-gray-600">{task.description}</p>
+                <p className="text-sm text-gray-600">{task.task_description}</p>
                 {task.category && (
                     <p className="text-sm text-gray-700 mb-1">Category: {task.category}</p>
                 )}
@@ -760,14 +744,14 @@ const Dashboard = () => {
                     <span className={`inline-block px-2 py-1 text-sm rounded-md ${getPriorityColor(task.priority)}`}>
                         {task.priority}
                     </span>
-                    {task.isShared && (
+                    {task.is_shared && (
                         <span className={`inline-block px-2 py-1 text-sm rounded-md ${getStatusColor('shared')}`}>
                             Shared
                         </span>
                     )}
                 </div>
-                <p className="text-xs text-gray-500 mt-1">Start: {task.startDate} {task.startTime}</p>
-                <p className="text-xs text-gray-500">End: {task.endDate} {moment(task.endTime, 'HH:mm:ss').format('HH:mm')}</p>
+                <p className="text-xs text-gray-500 mt-1">Start: {task.task_start_date} {task.task_start_time}</p>
+                <p className="text-xs text-gray-500">End: {task.task_end_date} {moment(task.task_end_time, 'HH:mm:ss').format('HH:mm')}</p>
     
                 {canEdit && (
                     <div className="mt-2 relative">
@@ -809,7 +793,7 @@ const Dashboard = () => {
                                 <ul className="space-y-2">
                                     {Object.values(comments[task.id])
                                         .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
-                                        .map(comment => renderComment(comment, task.id))}
+                                        .map(comment => renderComment(comment, task.id))} {/* Render comment with recursion for replies */}
                                 </ul>
                             ) : !commentLoading ? (
                                 <p className="text-gray-500 mt-2">No comments yet.</p>
@@ -848,7 +832,8 @@ const Dashboard = () => {
     }, TaskCardPropsAreEqual);
     
     TaskCard.displayName = 'TaskCard';
-
+    
+  
 
     const handleAddTask = useCallback(async (taskData) => {
         setLoading(true);
