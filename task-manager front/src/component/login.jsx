@@ -25,7 +25,7 @@ const Login = () => {
                 success: 'Login successful! Redirecting...',
                 error: {
                     render({ data }) {
-                        return data?.error || 'Login failed. Please try again.';
+                        return data?.error || 'Login failed. Please try again.'; // Fallback generic error
                     },
                 },
             }
@@ -33,30 +33,45 @@ const Login = () => {
     };
 
     const loginRequest = async ({ username, password }) => {
-        const response = await fetch('https://task-manager-91g9.onrender.com/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ username, password }),
-        });
+        try { // ✅ Try-catch block for fetch
+            const response = await fetch('http://localhost:4000/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, password }),
+            });
 
-        const data = await response.json();
-        if (response.ok) {
-            const token = data.token;
-            localStorage.setItem('token', token);
-            localStorage.setItem('username', data.username); // ✅ Changed to use data.username - storing username from backend response
+            const data = await response.json();
+            if (response.ok) {
+                const token = data.token;
+                localStorage.setItem('token', token);
+                localStorage.setItem('username', data.username);
 
-            // Calculate token expiration time (1 hour from now)
-            const expirationTime = new Date().getTime() + 60 * 60 * 1000; // 1 hour in milliseconds
-            localStorage.setItem('tokenExpiration', expirationTime.toString());
+                const expirationTime = new Date().getTime() + 60 * 60 * 1000;
+                localStorage.setItem('tokenExpiration', expirationTime.toString());
 
-            await new Promise((resolve) => setTimeout(resolve, 100));
-            setupAutomaticLogout(expirationTime); // Set up automatic logout timer
-            navigate('/');
-            return 'Login Successful';
-        } else {
-            throw { error: data.error || 'Login failed. Please try again.' };
+                await new Promise((resolve) => setTimeout(resolve, 100));
+                setupAutomaticLogout(expirationTime);
+                navigate('/');
+                return 'Login Successful';
+            } else {
+                // ✅ Improved error handling based on backend messages
+                let errorMessage = 'Login failed. Please try again.'; // Generic fallback
+                if (data && data.message) {
+                    errorMessage = data.message; // Use backend message if available
+                    if (data.message === 'Username not found') {
+                        errorMessage = 'Username not found. Please check your username.';
+                    } else if (data.message === 'Incorrect password') {
+                        errorMessage = 'Incorrect password. Please check your password.';
+                    }
+                }
+                throw { error: errorMessage }; // Throw with specific or generic error
+            }
+        } catch (error) {
+            // ✅ Catch network errors (e.g., no internet)
+            console.error('Fetch error during login:', error);
+            throw { error: 'Network error. Please check your internet connection.' };
         }
     };
 
@@ -66,7 +81,7 @@ const Login = () => {
 
         if (timeLeft > 0) {
             setTimeout(() => {
-                handleAutomaticLogout(); // Call logout function after timeout
+                handleAutomaticLogout();
             }, timeLeft);
         }
     };

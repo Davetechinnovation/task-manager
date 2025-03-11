@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react'; // ✅ Import useRef
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { addTask, editTask } from '../utils/api';
@@ -17,6 +17,7 @@ const Task = ({ onClose, setTasks, editingTask, reloadTasks}) => {
     const [loading, setLoading] = useState(false); // Added loading state
     const navigate = useNavigate();
     const [isEditing, setIsEditing] = useState(false);
+    const modalRef = useRef(null); // ✅ Create a ref for the modal content
 
     useEffect(() => {
         if (editingTask) {
@@ -143,8 +144,15 @@ const Task = ({ onClose, setTasks, editingTask, reloadTasks}) => {
 
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-40 flex items-center justify-center py-10">
-            <div className="bg-white p-6 shadow-lg rounded-lg w-full max-w-lg z-50 max-h-[90vh] overflow-y-auto">
+        <div
+            className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-40 flex items-center justify-center py-10"
+            onClick={(e) => {
+                if (modalRef.current && !modalRef.current.contains(e.target)) { // ✅ Check if click is outside modal content
+                    onClose();
+                }
+            }}
+        >
+            <div className="bg-white p-6 shadow-lg rounded-lg w-full max-w-lg z-50 max-h-[90vh] overflow-y-auto" ref={modalRef}> {/* ✅ Add ref to modal content div */}
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-bold">{editingTask ? 'Edit Task' : 'Create Task'}</h2>
                     <button onClick={onClose} className="text-gray-500 hover:text-gray-700">

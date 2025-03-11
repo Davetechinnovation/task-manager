@@ -29,21 +29,38 @@ const Signup = () => {
 
     // Encapsulate the signup fetch request in a separate async function
     const signupRequest = async ({ username, email, password }) => {
-        const response = await fetch('https://task-manager-91g9.onrender.com/register', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ username, email, password })
-        });
-        const data = await response.json();
-        if (!response.ok) {
-            // Throw an error to trigger the error toast
-            throw { error: data.error || 'Registration failed' }; // Pass error data to toast
-        } else {
-            await new Promise(resolve => setTimeout(resolve, 100));
-            navigate('/login'); // Redirect to login page after successful signup
-            return data.message || 'Registration successful'; // Success message for toast.promise
+        try { // ✅ Try-catch block for fetch
+            const response = await fetch('http://localhost:4000/signup', { // ✅ Corrected endpoint to '/signup'
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, email, password })
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                // Throw an error to trigger the error toast with specific backend messages
+                let errorMessage = 'Registration failed. Please try again.'; // Generic fallback
+                if (data && data.message) {
+                    errorMessage = data.message; // Use backend message if available
+                    if (data.message === 'Username already taken') {
+                        errorMessage = 'Username already taken. Please choose a different username.';
+                    } else if (data.message === 'Email already registered') {
+                        errorMessage = 'Email already registered. Please use a different email.';
+                    } else if (data.message === 'All fields are required for signup') {
+                        errorMessage = 'Please fill in all the required fields for signup.';
+                    }
+                }
+                throw { error: errorMessage }; // Throw with specific or generic error
+            } else {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                navigate('/login'); // Redirect to login page after successful signup
+                return data.message || 'Registration successful'; // Success message for toast.promise
+            }
+        } catch (error) {
+            // ✅ Catch network errors
+            console.error('Fetch error during signup:', error);
+            throw { error: 'Network error. Please check your internet connection.' };
         }
     };
 
