@@ -550,27 +550,23 @@ const Dashboard = () => {
 
 
     const TaskCardPropsAreEqual = (prevProps, nextProps) => {
-        // Compare relevant props to determine if a re-render is needed
         return (
             prevProps.task === nextProps.task &&
             prevProps.onEdit === nextProps.onEdit &&
             prevProps.onDelete === nextProps.onDelete &&
             prevProps.onUpdateStatus === nextProps.onUpdateStatus &&
             prevProps.showStatusDropdown === nextProps.showStatusDropdown &&
-            nextProps.showStatusDropdown === nextProps.showStatusDropdown &&
             prevProps.statusLoading === nextProps.statusLoading &&
             prevProps.showCommentsSection === nextProps.showCommentsSection &&
-            nextProps.showCommentsSection === nextProps.showCommentsSection &&
             prevProps.commentLoading === nextProps.commentLoading &&
-            nextProps.commentLoading === nextProps.commentLoading &&
             prevProps.comments === nextProps.comments &&
             prevProps.newCommentText === nextProps.newCommentText &&
-            nextProps.newCommentText === nextProps.newCommentText &&
             prevProps.replyingToCommentId === nextProps.replyingToCommentId &&
-            nextProps.replyingToCommentId === nextProps.replyingToCommentId
+            prevProps.username === nextProps.username
         );
     };
-
+    
+    // TaskCard component
     const TaskCard = memo(({
         task,
         onEdit,
@@ -590,14 +586,16 @@ const Dashboard = () => {
         handleDeleteComment,
         username,
         onShareTask,
-        replyingToCommentId, // ✅ Prop for reply state
-        setReplyingToCommentId, // ✅ Prop for reply state
+        replyingToCommentId,
+        setReplyingToCommentId,
     }) => {
         const isCommentsSectionVisible = showCommentsSection === task.id;
         const commentInputRef = useRef(null);
-
+    
+        // Log to track TaskCard renders
         console.log("TaskCard RENDERED for task ID:", task.id, "Comment Section Visible:", isCommentsSectionVisible);
-
+    
+        // Handle comment section toggle
         const handleCommentClick = useCallback(() => {
             if (!isCommentsSectionVisible) {
                 loadComments(task.id);
@@ -606,14 +604,16 @@ const Dashboard = () => {
                 setShowCommentsSection(null);
             }
         }, [isCommentsSectionVisible, task.id, loadComments, setShowCommentsSection]);
-
+    
+        // Focus the input field when the comment section is visible
         useEffect(() => {
             if (isCommentsSectionVisible && commentInputRef.current) {
                 commentInputRef.current.focus();
             }
         }, [isCommentsSectionVisible]);
-
-        const getStatusColor = (status) => {
+    
+        // Get status and priority colors
+        const getStatusColor = useCallback((status) => {
             switch (status) {
                 case 'pending': return 'bg-yellow-200 text-yellow-700';
                 case 'in-progress': return 'bg-blue-200 text-blue-700';
@@ -622,31 +622,25 @@ const Dashboard = () => {
                 case 'shared': return 'bg-purple-200 text-purple-700';
                 default: return 'bg-gray-200 text-gray-700';
             }
-        };
-
-        const getPriorityColor = (priority) => {
+        }, []);
+    
+        const getPriorityColor = useCallback((priority) => {
             switch (priority) {
                 case 'low': return 'bg-green-200 text-green-700';
                 case 'medium': return 'bg-yellow-200 text-yellow-700';
                 case 'high': return 'bg-red-200 text-red-700';
                 default: return 'bg-gray-200 text-gray-700';
             }
-        };
-
-        const canEdit = task.sharedByUsername === username || !task.isShared; // ✅ Only allow edit if user is sharer or task is not shared
-
+        }, []);
+    
+        const canEdit = task.sharedByUsername === username || !task.isShared;
+    
         return (
             <div className="p-4 border rounded-lg shadow-md relative">
                 <div className="absolute top-2 right-2 flex space-x-2 text-gray-600">
-                    {canEdit && ( // ✅ Conditionally render edit icon
-                        <FaEdit className="cursor-pointer" onClick={() => onEdit(task)} />
-                    )}
-                    {canEdit && ( // ✅ Conditionally render update status icon
-                        <MdUpdate className="cursor-pointer" onClick={() => setShowStatusDropdown(showStatusDropdown === task.id ? null : task.id)} />
-                    )}
-                    {canEdit && ( // ✅ Conditionally render delete icon
-                        <FaTrash className="cursor-pointer text-red-500" onClick={() => onDelete(task.id)} />
-                    )}
+                    {canEdit && <FaEdit className="cursor-pointer" onClick={() => onEdit(task)} />}
+                    {canEdit && <MdUpdate className="cursor-pointer" onClick={() => setShowStatusDropdown(showStatusDropdown === task.id ? null : task.id)} />}
+                    {canEdit && <FaTrash className="cursor-pointer text-red-500" onClick={() => onDelete(task.id)} />}
                     <FaShareAlt
                         className={`cursor-pointer ${task.isShared ? 'text-blue-500' : 'text-gray-500'}`}
                         onClick={() => onShareTask(task.id, task.isShared)}
@@ -654,7 +648,6 @@ const Dashboard = () => {
                     />
                 </div>
                 <h3 className="font-bold text-lg mb-1">{task.title}</h3>
-                {/* ✅ Display "Shared by: Me" for sharer, "Shared by: username" for others */}
                 {task.isShared && task.sharedByUsername && (
                     <p className="text-sm italic text-gray-500 mb-1">
                         Shared by: {task.sharedByUsername === username ? 'Me' : task.sharedByUsername}
@@ -679,8 +672,8 @@ const Dashboard = () => {
                 </div>
                 <p className="text-xs text-gray-500 mt-1">Start: {task.startDate} {task.startTime}</p>
                 <p className="text-xs text-gray-500">End: {task.endDate} {moment(task.endTime, 'HH:mm:ss').format('HH:mm')}</p>
-
-                {canEdit && ( // ✅ Conditionally render status dropdown
+    
+                {canEdit && (
                     <div className="mt-2 relative">
                         <select
                             className="w-full p-2 border rounded"
@@ -700,7 +693,7 @@ const Dashboard = () => {
                         )}
                     </div>
                 )}
-
+    
                 <div className="mt-3 border-t pt-3">
                     <button
                         className="p-1 text-gray-500 rounded-md flex items-center justify-center hover:bg-gray-100 transition-colors duration-200 w-full"
@@ -711,22 +704,38 @@ const Dashboard = () => {
                         Comments
                         {commentLoading && <FaSpinner className="animate-spin ml-1" />}
                     </button>
-
+    
                     {isCommentsSectionVisible && (
                         <div className="mt-2 relative">
                             <h4 className="font-semibold mb-2">Comments</h4>
                             {commentLoading && <p className="text-gray-500">Loading comments...</p>}
-                            {comments[task.id] && Object.values(comments[task.id]).length > 0 ? ( // ✅ Iterate over object values
+                            {comments[task.id] && Object.values(comments[task.id]).length > 0 ? (
                                 <ul className="space-y-2">
-                                    {Object.values(comments[task.id]).sort((a, b) => new Date(a.created_at) - new Date(b.created_at)).map(comment => ( // ✅ Iterate over object values and sort
-                                        renderComment(comment, task.id) // Render comment using useCallback renderComment function
+                                    {Object.values(comments[task.id]).sort((a, b) => new Date(a.created_at) - new Date(b.created_at)).map(comment => (
+                                        <li key={comment.id} className="p-2 rounded-md bg-gray-50 border">
+                                            <div className="flex items-center space-x-2 mb-1">
+                                                <FaUserCircle className="text-lg text-gray-700" />
+                                                <span className="font-semibold">{comment.username || username}</span>
+                                                <button
+                                                    className="ml-auto text-red-500 hover:text-red-700"
+                                                    onClick={() => handleDeleteComment(comment.id, task.id)}
+                                                    aria-label="Delete Comment"
+                                                >
+                                                    <FaTrash />
+                                                </button>
+                                            </div>
+                                            <p className="text-sm text-gray-800">{comment.comment}</p>
+                                            <p className="text-xs text-gray-500 mt-1 text-right">
+                                                {moment(comment.created_at).tz('Africa/Lagos').format('MMM DD, YYYY, hh:mm a')}
+                                            </p>
+                                        </li>
                                     ))}
                                 </ul>
                             ) : !commentLoading ? (
                                 <p className="text-gray-500 mt-2">No comments yet.</p>
                             ) : null}
-
-                            {!replyingToCommentId && ( // ✅ Conditionally render top-level comment input
+    
+                            {!replyingToCommentId && (
                                 <div className="flex mt-2">
                                     <input
                                         type="text"
@@ -734,51 +743,10 @@ const Dashboard = () => {
                                         className="flex-grow p-2 border rounded-md mr-2"
                                         placeholder="Add a comment..."
                                         value={newCommentText}
-                                        onChange={(e) => {
-                                            setNewCommentText(e.target.value);
-                                            setMentionSearchTerm(e.target.value); // ✅ Update search term for mentions
-                                            setShowMentionsDropdown(e.target.value.includes('@')); // ✅ Show dropdown on '@'
-                                        }}
-                                        onBlur={() => setTimeout(() => setShowMentionsDropdown(false), 100)} // ✅ Hide dropdown on blur
-                                        onFocus={() => setShowMentionsDropdown(mentionSearchTerm.includes('@'))} // ✅ Show dropdown on focus if '@' is present
-
+                                        onChange={(e) => setNewCommentText(e.target.value)}
                                     />
-                                     {showMentionsDropdown && (
-                                        <ul className="absolute z-10 mt-1 w-auto bg-white border rounded shadow-md">
-                                            {mentionedUsers.length === 0 ? ( // ✅ Handle no users case
-                                                <li className="px-4 py-2 text-gray-500">No active users</li>
-                                            ) : mentionedUsers.length === 1 ? ( // ✅ Handle single user case
-                                                <li
-                                                    key={mentionedUsers[0]}
-                                                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                                                    onClick={() => {
-                                                        setNewCommentText(newCommentText.replace(/@\w*/, `@${mentionedUsers[0]} `)); // ✅ Use the single username
-                                                        setShowMentionsDropdown(false);
-                                                    }}
-                                                >
-                                                    {mentionedUsers[0]}
-                                                </li>
-
-                                            ) : ( // ✅ Handle multiple users case
-                                                mentionedUsers
-                                                    .filter(user => user.toLowerCase().includes(mentionSearchTerm.substring(mentionSearchTerm.indexOf('@') + 1).toLowerCase()))
-                                                    .map(user => (
-                                                        <li
-                                                            key={user}
-                                                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                                                            onClick={() => {
-                                                                setNewCommentText(newCommentText.replace(/@\w*/, `@${user} `));
-                                                                setShowMentionsDropdown(false);
-                                                            }}
-                                                        >
-                                                            {user}
-                                                        </li>
-                                                    ))
-                                            )}
-                                        </ul>
-                                    )}
                                     <button
-                                        onClick={() => handleAddComment(task.id)} // ✅ Add top-level comment
+                                        onClick={() => handleAddComment(task.id)}
                                         className="p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200"
                                         disabled={commentLoading}
                                         aria-label="Add Comment"
@@ -793,9 +761,10 @@ const Dashboard = () => {
             </div>
         );
     }, TaskCardPropsAreEqual);
-
+    
     TaskCard.displayName = 'TaskCard';
 
+    
 
     const handleAddTask = useCallback(async (taskData) => {
         setLoading(true);
