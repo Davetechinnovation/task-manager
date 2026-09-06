@@ -1,10 +1,26 @@
-## 🔗 Portfolio
+# Task Manager
 
-Visit my full portfolio: [https://dandys-portfolio.vercel.app](https://dandys-portfolio.vercel.app)
+A full-stack task manager built during the DDM cohort 4 software development training — create, organise, prioritise and track tasks, with task comments and user accounts.
 
-## 📬 Contact
+## Tech Stack
 
-I'm open to freelance, collaborations, or full-time remote roles.
+| Layer | Tech |
+|---|---|
+| Backend | Node.js, Express |
+| Database | SQLite |
+| Auth | Custom auth middleware |
+| Frontend | HTML, CSS, JavaScript |
 
-- **Twitter:** [@Davetechinnov](https://x.com/Davetechinnov)
-- **WhatsApp:** [Chat with me](https://api.whatsapp.com/send?phone=2349168071385)
+## Run It Locally
+
+```bash
+cd DDm-cohort4-task-manager
+npm install
+npm start
+```
+
+The SQLite database (`tasks.db`) is created automatically on first run.
+
+---
+
+Built by [Udoka Dandave (Dandy)](https://dandaveudoka.com.ng) - [GitHub](https://github.com/Davetechinnovation)
